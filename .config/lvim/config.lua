@@ -1,14 +1,37 @@
--- Read the docs: https://www.lunarvim.org/docs/configuration
--- Example configs: https://github.com/LunarVim/starter.lvim
--- Video Tutorials: https://www.youtube.com/watch?v=sFA9kX-Ud_c&list=PLhoH5vyxr6QqGu0i7tt_XoVK9v-KvZ3m6
--- Forum: https://www.reddit.com/r/lunarvim/
--- Discord: https://discord.com/invite/Xb9B4Ny
-
--- Luna
+-- Lunar
 lvim.builtin.which_key.opts.triggers = "auto"
 lvim.builtin.terminal.open_mapping = "<c-t>"
 lvim.builtin.autopairs.active = false
 lvim.builtin.treesitter.rainbow.enable = true
+
+
+-- folding powered by treesitter
+-- https://github.com/nvim-treesitter/nvim-treesitter#folding
+-- look for foldenable: https://github.com/neovim/neovim/blob/master/src/nvim/options.lua
+-- Vim cheatsheet, look for folds keys: https://devhints.io/vim
+vim.opt.foldmethod = "expr" -- default is "normal"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()" -- default is ""
+vim.opt.foldenable = false -- if this option is true and fold method option is other than normal, every time a document is opened everything will be folded.
+
+vim.g.rainbow_delimiters = {
+    -- strategy = {
+    --     [''] = rainbow_delimiters.strategy['global'],
+    --     vim = rainbow_delimiters.strategy['local'],
+    -- },
+    -- query = {
+    --     [''] = 'rainbow-delimiters',
+    --     lua = 'rainbow-blocks',
+    -- },
+    highlight = {
+        'RainbowDelimiterViolet',
+        'RainbowDelimiterBlue',
+        'RainbowDelimiterYellow',
+        'RainbowDelimiterCyan',
+        'RainbowDelimiterGreen',
+        'RainbowDelimiterOrange',
+        'RainbowDelimiterRed',
+    },
+}
 
 -- General Editor
 vim.opt.relativenumber = true -- relative line numbers
@@ -17,80 +40,74 @@ vim.o.timeoutlen = 300
 
 -- Language
 vim.opt.spell = true
-vim.opt.spelllang = "en_us"
--- vim.g.python3_host_prog = "/home/elayn/.venv/bin/python"
+vim.opt.spelllang = {"en_us","de_de"}
 
 lvim.builtin.which_key.setup.marks = true
 lvim.builtin.which_key.setup.plugins.marks = true
 lvim.builtin.which_key.setup.plugins.presets = {
-  operators = true,     -- adds help for operators like d, y, ...
+  operators = false,    -- adds help for operators like d, y, ...
   motions = true,       -- adds help for motions
   text_objects = false, -- help for text objects triggered after entering an operator
   windows = true,       -- default bindings on <c-w>
   nav = true,           -- misc bindings to work with windows
-  z = false,            -- bindings for folds, spelling and others prefixed with z
+  z = true,             -- bindings for folds, spelling and others prefixed with z
   g = false,            -- bindings for prefixed with g
 }
 
 
+vim.list_extend(lvim.lsp.automatic_configuration.skipped_servers, { "pyright" })
+lvim.lsp.automatic_configuration.skipped_servers = vim.tbl_filter(function(server)
+  return server ~= "jedi_language_server"
+end, lvim.lsp.automatic_configuration.skipped_servers)
+
+vim.g.python3_host_prog = "/home/elayn/.venv/bin/python3"
+
+
 lvim.plugins = {
-  -- python
-  "mfussenegger/nvim-dap-python",
-  "LiadOz/nvim-dap-repl-highlights",
-  "nvim-neotest/neotest",
-  "nvim-neotest/neotest-python",
   {
-    "ThePrimeagen/refactoring.nvim",
-    event = "BufRead",
+    "desdic/greyjoy.nvim",
     config = function()
-      require "refactoring".setup({})
+      local greyjoy = require("greyjoy")
+      greyjoy.setup({
+        output_results = "toggleterm",
+        last_first = true,
+        extensions = {
+          generic = {
+            commands = {
+              ["run {filename}"] = {
+                command = { "python", "{filename}" },
+                filetype = "python"
+              },
+              ["run module {filename}"] = {
+                command = { "python", "-m", "{filename}" },
+                filetype = "python"
+              },
+              ["pudb {filename}"] = {
+                command = { "pudb", "--continue", "{filename}" },
+                filetype = "python"
+              },
+              ["pudb module {filename}"] = {
+                command = { "pudb", "--continue", "--module", "{filename}" },
+                filetype = "python"
+              },
+            }
+          },
+          kitchen = {
+            targets = { "converge", "verify" },
+            include_all = false,
+          }
+        },
+        run_groups = {
+          fast = { "generic", "makefile", "cargo" },
+        }
+      })
+      greyjoy.load_extension("generic")
+      greyjoy.load_extension("vscode_tasks")
+      greyjoy.load_extension("makefile")
+      greyjoy.load_extension("kitchen")
+      greyjoy.load_extension("cargo")
     end
   },
-  {
-    "ray-x/lsp_signature.nvim",
-    event = "BufRead",
-    config = function() require "lsp_signature".on_attach() end,
-  },
-  {
-    "folke/trouble.nvim",
-    cmd = "TroubleToggle",
-  },
-  {
-    "folke/lsp-colors.nvim",
-    event = "BufRead",
-  },
-  "MunifTanjim/nui.nvim",
-  {
-    "metakirby5/codi.vim",
-    cmd = "Codi",
-  },
-  "lukas-reineke/cmp-under-comparator", -- dunder methods at the end
-
-  {
-    'tzachar/cmp-tabnine',
-    build = './install.sh',
-    dependencies = 'hrsh7th/nvim-cmp',
-    event = "InsertEnter",
-  },
-  {
-    "ahmedkhalf/lsp-rooter.nvim",
-    event = "BufRead",
-    config = function()
-      require("lsp-rooter").setup()
-    end,
-  },
-  -- {
-  -- "zbirenbaum/copilot.lua",
-  -- cmd = "Copilot",
-  -- event = "InsertEnter",
-  -- config = function()
-  --   require("copilot").setup({
-  --       suggestion = { enabled = false },
-  --       panel = { enabled = false },})
-  --   end,
-  -- },
-
-  -- -- "unblevable/quick-scope",
   "stevearc/dressing.nvim",
   "habamax/vim-asciidoctor",
   "rhysd/vim-grammarous",
@@ -121,11 +138,99 @@ lvim.plugins = {
   },
 
   -- Color
-  "mrjones2014/nvim-ts-rainbow",
   "nyoom-engineering/oxocarbon.nvim",
   "nyngwang/nvimgelion",
   "ray-x/starry.nvim",
   "marko-cerovac/material.nvim",
+
+  {
+    'kaarmu/typst.vim',
+    ft = 'typst',
+    lazy = false,
+  },
+
+  -- python
+  {
+    "AckslD/swenv.nvim",
+    opts = {
+      -- Should return a list of tables with a `name` and a `path` entry each.
+      -- Gets the argument `venvs_path` set below.
+      -- By default just lists the entries in `venvs_path`.
+      get_venvs = function(venvs_path)
+        return require('swenv.api').get_venvs(venvs_path)
+      end,
+      -- Path passed to `get_venvs`.
+      venvs_path = vim.fn.expand('~/.venv'),
+      -- Something to do after setting an environment, for example call vim.cmd.LspRestart
+      post_set_venv = nil,
+    }
+  },
+  "mfussenegger/nvim-dap-python",
+  "LiadOz/nvim-dap-repl-highlights",
+  "nvim-neotest/neotest",
+  "nvim-neotest/neotest-python",
+  {
+    "ThePrimeagen/refactoring.nvim",
+    event = "BufRead",
+    config = function()
+      require "refactoring".setup({})
+    end
+  },
+  {
+    "ray-x/lsp_signature.nvim",
+    event = "BufRead",
+    config = function() require "lsp_signature".on_attach() end,
+  },
+  {
+    "folke/trouble.nvim",
+    cmd = "TroubleToggle",
+  },
+  {
+    "folke/lsp-colors.nvim",
+    event = "BufRead",
+  },
+  "MunifTanjim/nui.nvim",
+  {
+    "metakirby5/codi.vim",
+    cmd = "Codi",
+  },
+  "lukas-reineke/cmp-under-comparator", -- dunder methods at the end
+  {
+    'tzachar/cmp-tabnine',
+    build = './install.sh',
+    dependencies = 'hrsh7th/nvim-cmp',
+    event = "InsertEnter",
+  },
+  {
+    "ahmedkhalf/lsp-rooter.nvim",
+    event = "BufRead",
+    config = function()
+      require("lsp-rooter").setup()
+    end,
+  },
+
+  -- -- {
+  -- "zbirenbaum/copilot.lua",
+  -- cmd = "Copilot",
+  -- event = "InsertEnter",
+  -- config = function()
+  --   require("copilot").setup({
+  --       suggestion = { enabled = false },
+  --       panel = { enabled = false },})
+  --   end,
+  -- },
+
+  -- Color
+--  "mrjones2014/nvim-ts-rainbow",
+  "HiPhish/rainbow-delimiters.nvim",
+}
+
+require "python"
+
+lvim.builtin.which_key.mappings["<leader>"] = {
+  name = "run",
+  ["<leader>"] = { "<cmd>Greyjoy<cr>", "Run..." },
+  v = { "<cmd>lua require('swenv.api').pick_venv()<cr>", "Choose python venv" },
 }
 
 -- leap: jump to anywhere, even other windows
@@ -136,99 +241,3 @@ vim.keymap.set('', "s", function()
   )
   require('leap').leap { target_windows = focusable_windows_on_tabpage }
 end)
-
-
--- refactoring
-lvim.builtin.which_key.mappings["r"] = {
-  name = "Refactor",
-  ["f"] = { function() require('refactoring').refactor('Extract Function To File') end, "extract function to file" },
-  ["e"] = { function() require('refactoring').refactor('Extract Function') end, "extract function" },
-}
-
--- "<leader>rf", function() require('refactoring').refactor('Extract Function To File') end)
---   -- Extract function supports only visual mode
--- "<leader>rv", function() require('refactoring').refactor('Extract Variable') end)
---   -- Extract variable supports only visual mode
--- "<leader>ri", function() require('refactoring').refactor('Inline Variable') end)
---   -- Inline var supports both normal and visual mode
-
--- "<leader>rb", function() require('refactoring').refactor('Extract Block') end)
--- "<leader>rbf", function() require('refactoring').refactor('Extract Block To File') end)
-
--- copilot
--- lvim.builtin.cmp.source = {name = "copilot", group_index = 2 }
-
-local cmp = require("cmp")
-lvim.builtin.cmp.sorting = {
-  comparators = {
-    cmp.config.compare.offset,
-    cmp.config.compare.exact,
-    cmp.config.compare.score,
-    require "cmp-under-comparator".under,
-    cmp.config.compare.kind,
-    cmp.config.compare.sort_text,
-    cmp.config.compare.length,
-    cmp.config.compare.order,
-  },
-}
-
-
--- require('cmp').setup({
---   sources = {
---     { name = 'nvim_lsp_signature_help' }
---   }
--- })
-
-
--- Python
-local formatters = require "lvim.lsp.null-ls.formatters"
-formatters.setup { { name = "black" }, }
-
--- debugging and pytest
-lvim.builtin.dap.active = true
-local mason_path = vim.fn.glob(vim.fn.stdpath "data" .. "/mason/")
-pcall(function()
-  require("dap-python").setup("~/.venv/bin/python")
-end)
-
-require("neotest").setup({
-  adapters = {
-    require("neotest-python")({
-      dap = {
-        justMyCode = true,
-        console = "integratedTerminal",
-      },
-      args = { "--log-level", "DEBUG", "--quiet" },
-      runner = "pytest",
-    })
-  }
-})
-
-lvim.builtin.which_key.mappings["t"] = {
-  name = "Testing",
-  m = { "<cmd>lua require('neotest').run.run()<cr>", "Test Method" },
-  M = { "<cmd>lua require('neotest').run.run({strategy = 'dap'})<cr>", "Test Method DAP" },
-  f = { "<cmd>lua require('neotest').run.run({vim.fn.expand('%')})<cr>", "Test Class" },
-  F = { "<cmd>lua require('neotest').run.run({vim.fn.expand('%'), strategy = 'dap'})<cr>", "Test Class DAP" },
-  S = { "<cmd>lua require('neotest').summary.toggle()<cr>", "Test Summary" },
-}
-
--- I don't need a tree sitter info tab
-lvim.builtin.which_key.mappings["T"] = {
-      name = "Diagnostics",
-      t = { "<cmd>TroubleToggle<cr>", "trouble" },
-      w = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "workspace" },
-      d = { "<cmd>TroubleToggle document_diagnostics<cr>", "document" },
-      q = { "<cmd>TroubleToggle quickfix<cr>", "quickfix" },
-      l = { "<cmd>TroubleToggle loclist<cr>", "loclist" },
-      r = { "<cmd>TroubleToggle lsp_references<cr>", "references" },
-    },
-
-    vim.api.nvim_set_keymap("i", "<C-K>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", {})
-vim.api.nvim_set_keymap("n", "<C-K>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", {})
-
-
-
--- Codi
-vim.g["codi#virtual_text_prefix"] = "\t󱉋 "
-vim.g["codi#virtual_text_pos"] = "eol"

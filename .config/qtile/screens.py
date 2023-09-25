@@ -8,14 +8,18 @@ from libqtile import hook, qtile
 
 
 widget_defaults = dict(
-    font="Iosevka Term Medium Extended", fontsize=15, padding=5, color="c8c6c5ff"
+    # font="Iosevka Term Medium Extended", fontsize=15, padding=5, color="c8c6c5ff"
+    font="Jost*",
+    fontsize=15,
+    padding=5,
+    color="c8c6c5ff",
 )
 extension_defaults = widget_defaults.copy()
 
 
 class NetMax(widget.Net):
     def _format(self, down, down_letter, up, up_letter, total, total_letter):
-        lenght = 2 # int(6)
+        lenght = 2  # int(6)
         max_len_down = 2 - len(down_letter)
         max_len_up = 1 - len(up_letter)
         max_len_total = lenght - len(total_letter)
@@ -25,7 +29,7 @@ class NetMax(widget.Net):
 
         down_prec = 0
         up_prec = 0
-        max_len= 2
+        max_len = 2
 
         down = ("{val:{max_len}." + str(down_prec) + "f}").format(
             val=down, max_len=max_len_down
@@ -52,8 +56,7 @@ screens = [
                 # widget.WindowName(max_chars=100),
                 widget.Notify(parse_text=lambda t: t.replace("\n", " "), max_chars=100),
                 widget.Spacer(length=bar.STRETCH),
-                widget.Battery(format="β {percent:2.0%} {watt:.1f} W"),
-                widget.CPU(format="𝛹 {load_percent:>2.0f}%"),
+                widget.Battery(format="β {percent:2.0%} {watt:.1f} W"),                widget.CPU(format="𝛹 {load_percent:>2.0f}%"),
                 widget.ThermalSensor(tag_sensor="Package id 0"),
                 NetMax(format="{down}/{up}", update_interval=1, prefix="M"),
                 # widget.ThermalSensor(tag_sensor="edge"),

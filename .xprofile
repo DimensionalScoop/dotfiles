@@ -20,6 +20,7 @@ xset -dpms &
 # wal -R &
 nitrogen --restore &
 picom &
+/usr/bin/dunst &
 
 
 xfce4-power-manager &

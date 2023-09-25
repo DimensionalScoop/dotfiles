@@ -10,3 +10,9 @@ Dependency:
 	location: path
 	string: scribus
 
+Extension "Plot" failed to load because a dependency was not met.
+Dependency:
+	type: file
+	location: inx
+	string: hpgl_decoder.py
+
