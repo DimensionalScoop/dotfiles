@@ -1,0 +1,14 @@
+[user]
+	email = max.pernklau@udo.edu
+	name = Max Pernklau
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[pull]
+	rebase = false
+[init]
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
