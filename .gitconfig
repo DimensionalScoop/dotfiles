@@ -1,8 +1,0 @@
-[pull]
-	rebase = false
-	ff = only
-[user]
-	email = m@pernklau.eu
-	name = DimensionalScoop
-[init]
-	defaultBranch = main
